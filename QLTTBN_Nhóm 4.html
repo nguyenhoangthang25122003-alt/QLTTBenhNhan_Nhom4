@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MedCare</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+
+:root {
+  --blue: #1976D2;
+  --blue-dark: #1256A0;
+  --blue-light: #E3F2FD;
+  --blue-mid: #42A5F5;
+  --accent: #FFA726;
+  --accent-light: #FFF3E0;
+  --green: #26A69A;
+  --green-light: #E0F2F1;
+  --red: #EF5350;
+  --red-light: #FFEBEE;
+  --gray-50: #F8FAFF;
+  --gray-100: #F0F4FF;
+  --gray-200: #E2E8F0;
+  --gray-300: #CBD5E1;
+  --gray-400: #94A3B8;
+  --gray-500: #64748B;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1E293B;
+  --white: #ffffff;
+  --shadow-sm: 0 1px 4px rgba(25,118,210,0.08);
+  --shadow: 0 4px 16px rgba(25,118,210,0.12);
+  --shadow-lg: 0 8px 32px rgba(25,118,210,0.18);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+body {
+  font-family: var(--font);
+  background: linear-gradient(135deg, #E3F2FD 0%, #EDE7F6 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* ===== PHONE SHELL ===== */
+.phone {
+  width: 390px;
+  height: 844px;
+  background: #111;
+  border-radius: 50px;
+  padding: 10px;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.5), 0 0 0 1px #333, inset 0 0 0 1px #222;
+  position: relative;
+  flex-shrink: 0;
+}
+.phone::before {
+  content:'';position:absolute;left:-3px;top:100px;
+  width:3px;height:32px;background:#222;border-radius:3px 0 0 3px;
+  box-shadow:0 44px 0 #222,0 82px 0 #222;
+}
+.phone::after {
+  content:'';position:absolute;right:-3px;top:150px;
+  width:3px;height:66px;background:#222;border-radius:0 3px 3px 0;
+}
+.screen {
+  background: var(--gray-50);
+  border-radius: 42px;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* STATUS BAR */
+.status-bar {
+  background: var(--blue-dark);
+  padding: 12px 24px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.status-time { color: white; font-size: 13px; font-weight: 700; }
+.status-icons { display: flex; align-items: center; gap: 5px; }
+.status-icons svg { color: white; }
+.dynamic-island {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  top: 18px; width: 110px; height: 28px;
+  background: #000; border-radius: 20px; z-index: 10;
+}
+
+/* SCROLL AREA */
+.scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+}
+.scroll-area::-webkit-scrollbar { display: none; }
+
+/* PAGES */
+.page { display: none; flex-direction: column; flex: 1; }
+.page.active-page { display: flex; }
+
+/* TOP HEADER per page */
+.page-header {
+  background: linear-gradient(135deg, var(--blue-dark) 0%, var(--blue) 100%);
+  padding: 16px 20px 20px;
+  flex-shrink: 0;
+}
+.page-header-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.page-header-title { color: white; font-size: 20px; font-weight: 700; }
+.header-action {
+  width: 36px; height: 36px; background: rgba(255,255,255,0.2);
+  border-radius: 50%; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; color: white;
+}
+.search-header {
+  display: flex; align-items: center; gap: 10px;
+  background: white; border-radius: 14px; padding: 10px 14px;
+}
+.search-header svg { color: var(--gray-400); flex-shrink: 0; }
+.search-header input {
+  border: none; outline: none; font-family: var(--font);
+  font-size: 13px; color: var(--gray-700); background: transparent; width: 100%;
+}
+.search-header input::placeholder { color: var(--gray-400); }
+
+/* PAGE CONTENT */
+.page-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 80px;
+}
+.page-content::-webkit-scrollbar { display: none; }
+
+/* STATS ROW */
+.stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 14px;
+  box-shadow: var(--shadow-sm);
+  display: flex; flex-direction: column; gap: 6px;
+}
+.stat-card-header { display: flex; align-items: center; justify-content: space-between; }
+.stat-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+}
+.stat-icon.blue { background: var(--blue-light); color: var(--blue); }
+.stat-icon.green { background: var(--green-light); color: var(--green); }
+.stat-icon.orange { background: var(--accent-light); color: var(--accent); }
+.stat-icon.red { background: var(--red-light); color: var(--red); }
+.stat-value { font-size: 26px; font-weight: 800; color: var(--gray-800); line-height: 1; }
+.stat-label { font-size: 11px; color: var(--gray-400); font-weight: 500; }
+.stat-badge {
+  font-size: 10px; font-weight: 700; padding: 2px 6px;
+  border-radius: 20px; background: var(--blue-light); color: var(--blue);
+}
+
+/* SECTION TITLE */
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.section-title { font-size: 15px; font-weight: 700; color: var(--gray-800); }
+.section-link { font-size: 12px; color: var(--blue); font-weight: 600; cursor: pointer; }
+
+/* FILTER TABS */
+.filter-tabs {
+  display: flex; gap: 6px; overflow-x: auto;
+  padding-bottom: 2px;
+}
+.filter-tabs::-webkit-scrollbar { display: none; }
+.filter-tab {
+  padding: 7px 16px; border: 1.5px solid var(--gray-200);
+  background: white; border-radius: 20px;
+  font-family: var(--font); font-size: 12px; font-weight: 600;
+  color: var(--gray-500); cursor: pointer; white-space: nowrap;
+  transition: all 0.2s;
+}
+.filter-tab.active {
+  background: var(--blue); border-color: var(--blue); color: white;
+}
+
+/* PATIENT CARD */
+.patient-card {
+  background: white; border-radius: var(--radius);
+  padding: 14px; box-shadow: var(--shadow-sm);
+  display: flex; align-items: center; gap: 12px;
+  cursor: pointer; transition: all 0.15s;
+  border: 1.5px solid transparent;
+}
+.patient-card:active { transform: scale(0.98); border-color: var(--blue-light); }
+.patient-avatar {
+  width: 44px; height: 44px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 800; color: white; flex-shrink: 0;
+}
+.patient-info { flex: 1; min-width: 0; }
+.patient-name { font-size: 14px; font-weight: 700; color: var(--gray-800); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.patient-meta { font-size: 11.5px; color: var(--gray-400); margin-top: 2px; }
+.patient-id-badge {
+  font-size: 10px; font-weight: 700; padding: 3px 7px;
+  background: var(--blue-light); color: var(--blue);
+  border-radius: 8px; font-family: monospace;
+}
+.patient-status { margin-top: 4px; }
+.badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 3px 8px; border-radius: 20px; font-size: 10.5px; font-weight: 700;
+}
+.badge-active { background: var(--green-light); color: var(--green); }
+.badge-inactive { background: var(--gray-100); color: var(--gray-500); }
+.badge-male { background: var(--blue-light); color: var(--blue); }
+.badge-female { background: #FCE4EC; color: #C62828; }
+.badge-pending { background: var(--accent-light); color: var(--accent); }
+.badge-done { background: var(--green-light); color: var(--green); }
+.badge-cancelled { background: var(--red-light); color: var(--red); }
+.patient-arrow { color: var(--gray-300); flex-shrink: 0; }
+
+/* ADD FAB */
+.fab {
+  position: absolute;
+  bottom: 76px; right: 16px;
+  width: 52px; height: 52px;
+  background: var(--blue); color: white;
+  border: none; border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; box-shadow: var(--shadow-lg);
+  z-index: 50; transition: all 0.2s;
+}
+.fab:active { transform: scale(0.93); }
+
+/* BOTTOM NAV */
+.bottom-nav {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: white;
+  border-top: 1px solid var(--gray-100);
+  height: 68px;
+  display: flex;
+  z-index: 100;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
+}
+.nav-btn {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 4px; border: none; background: transparent;
+  cursor: pointer; color: var(--gray-400);
+  font-family: var(--font); font-size: 10px; font-weight: 600;
+  transition: all 0.2s; padding-bottom: 4px;
+}
+.nav-btn.active { color: var(--blue); }
+.nav-btn svg { transition: all 0.2s; }
+.nav-btn.active svg { transform: scale(1.1); }
+.nav-indicator {
+  position: absolute;
+  top: 0; height: 3px;
+  background: var(--blue); border-radius: 0 0 3px 3px;
+  width: 40px; transition: left 0.3s ease;
+}
+
+/* APPOINTMENT CARD */
+.appt-card {
+  background: white; border-radius: var(--radius);
+  padding: 14px; box-shadow: var(--shadow-sm);
+  display: flex; gap: 12px; cursor: pointer;
+  border-left: 4px solid var(--blue);
+}
+.appt-card.done { border-left-color: var(--green); }
+.appt-card.cancelled { border-left-color: var(--red); }
+.appt-time-col {
+  display: flex; flex-direction: column; align-items: center;
+  min-width: 44px;
+}
+.appt-time { font-size: 15px; font-weight: 800; color: var(--blue); }
+.appt-date { font-size: 10px; color: var(--gray-400); margin-top: 2px; text-align: center; }
+.appt-divider { width: 1px; background: var(--gray-200); flex-shrink: 0; }
+.appt-info { flex: 1; min-width: 0; }
+.appt-patient { font-size: 13.5px; font-weight: 700; color: var(--gray-800); }
+.appt-doctor { font-size: 11.5px; color: var(--gray-400); margin-top: 2px; }
+.appt-reason { font-size: 11.5px; color: var(--gray-500); margin-top: 4px; }
+.appt-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+
+/* RECORD CARD */
+.record-card {
+  background: white; border-radius: var(--radius);
+  padding: 14px; box-shadow: var(--shadow-sm);
+  cursor: pointer; transition: all 0.15s;
+}
+.record-card:active { transform: scale(0.98); }
+.record-top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.record-avatar {
+  width: 44px; height: 44px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 800; color: white; flex-shrink: 0;
+}
+.record-name { font-size: 14px; font-weight: 700; color: var(--gray-800); }
+.record-sub { font-size: 11.5px; color: var(--gray-400); margin-top: 2px; }
+.record-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.record-item { display: flex; flex-direction: column; gap: 2px; }
+.record-item-label { font-size: 10px; color: var(--gray-400); font-weight: 600; text-transform: uppercase; }
+.record-item-value { font-size: 12.5px; font-weight: 600; color: var(--gray-700); }
+.record-footer-btns { display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--gray-100); }
+
+/* REPORT CARD */
+.report-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.report-stat-card {
+  background: white; border-radius: var(--radius); padding: 14px;
+  box-shadow: var(--shadow-sm); text-align: center;
+}
+.report-stat-value { font-size: 28px; font-weight: 800; color: var(--blue); }
+.report-stat-label { font-size: 11px; color: var(--gray-400); margin-top: 2px; }
+.chart-card {
+  background: white; border-radius: var(--radius);
+  padding: 16px; box-shadow: var(--shadow-sm);
+}
+.chart-card-title { font-size: 13px; font-weight: 700; color: var(--gray-700); margin-bottom: 14px; }
+.chart-wrap { position: relative; height: 170px; }
+.top-doctor-card {
+  background: white; border-radius: var(--radius);
+  padding: 14px; box-shadow: var(--shadow-sm);
+}
+.top-doctor-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0; border-bottom: 1px solid var(--gray-100);
+}
+.top-doctor-item:last-child { border-bottom: none; padding-bottom: 0; }
+.rank-badge {
+  width: 24px; height: 24px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800; flex-shrink: 0;
+}
+.rank-badge.gold { background: #FFF3E0; color: #F57C00; }
+.rank-badge.silver { background: var(--gray-100); color: var(--gray-500); }
+.rank-badge.bronze { background: #FBE9E7; color: #BF360C; }
+.rank-badge.other { background: var(--gray-100); color: var(--gray-400); }
+.top-name { flex: 1; font-size: 13px; font-weight: 600; color: var(--gray-800); }
+.top-count { font-size: 12px; font-weight: 700; color: var(--blue); }
+
+/* BUTTONS */
+.btn-primary {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  background: var(--blue); color: white; border: none;
+  padding: 12px 18px; border-radius: var(--radius-sm);
+  font-family: var(--font); font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: all 0.2s; flex: 1;
+}
+.btn-primary:active { transform: scale(0.97); background: var(--blue-dark); }
+.btn-secondary {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  background: var(--blue-light); color: var(--blue); border: none;
+  padding: 12px 18px; border-radius: var(--radius-sm);
+  font-family: var(--font); font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: all 0.2s; flex: 1;
+}
+.btn-danger {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  background: var(--red-light); color: var(--red); border: none;
+  padding: 12px 18px; border-radius: var(--radius-sm);
+  font-family: var(--font); font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: all 0.2s; flex: 1;
+}
+
+/* EMPTY */
+.empty-state { padding: 48px 20px; text-align: center; color: var(--gray-400); }
+.empty-state svg { opacity: 0.3; margin-bottom: 10px; }
+.empty-state p { font-size: 13px; }
+
+/* PAGINATION */
+.pagination { display: flex; justify-content: center; align-items: center; gap: 6px; }
+.page-btn {
+  width: 32px; height: 32px; border: 1.5px solid var(--gray-200);
+  background: white; border-radius: var(--radius-sm);
+  font-family: var(--font); font-size: 12px; font-weight: 600;
+  color: var(--gray-600); cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.page-btn.active { background: var(--blue); border-color: var(--blue); color: white; }
+.page-btn:disabled { opacity: 0.35; cursor: default; }
+
+/* MODAL */
+.modal-overlay {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.45); backdrop-filter: blur(4px);
+  z-index: 200; display: none; align-items: flex-end; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: white; border-radius: 24px 24px 0 0;
+  width: 100%; max-height: 90%;
+  display: flex; flex-direction: column;
+  animation: slideUp 0.3s ease;
+}
+.modal-handle {
+  width: 40px; height: 4px; background: var(--gray-200);
+  border-radius: 2px; margin: 12px auto 0; flex-shrink: 0;
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px 12px; flex-shrink: 0;
+  border-bottom: 1px solid var(--gray-100);
+}
+.modal-title { font-size: 16px; font-weight: 700; color: var(--gray-800); }
+.modal-close {
+  width: 30px; height: 30px; border: none; background: var(--gray-100);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--gray-500);
+}
+.modal-body { overflow-y: auto; padding: 16px 20px; flex: 1; }
+.modal-body::-webkit-scrollbar { display: none; }
+.modal-footer {
+  padding: 12px 20px 24px; display: flex; gap: 10px; flex-shrink: 0;
+  border-top: 1px solid var(--gray-100);
+}
+@keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* FORM */
+.form-section { margin-bottom: 20px; }
+.form-section-title {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.8px; color: var(--blue); margin-bottom: 12px;
+  padding-bottom: 8px; border-bottom: 2px solid var(--blue-light);
+}
+.form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.form-group label { font-size: 12px; font-weight: 700; color: var(--gray-600); }
+.required { color: var(--red); }
+.form-group input, .form-group select, .form-group textarea {
+  border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm);
+  padding: 11px 14px; font-family: var(--font); font-size: 13.5px;
+  color: var(--gray-800); background: var(--gray-50); outline: none;
+  transition: all 0.2s; resize: vertical; width: 100%;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+  border-color: var(--blue); background: white;
+  box-shadow: 0 0 0 3px rgba(25,118,210,0.08);
+}
+.form-group input.error { border-color: var(--red); }
+.error-msg { font-size: 11px; color: var(--red); min-height: 14px; }
+
+/* VIEW PATIENT */
+.view-header {
+  background: linear-gradient(135deg, var(--blue-dark), var(--blue));
+  border-radius: var(--radius); padding: 20px;
+  display: flex; align-items: center; gap: 14px; margin-bottom: 16px;
+}
+.view-avatar {
+  width: 56px; height: 56px; border-radius: 18px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 800; color: white;
+  background: rgba(255,255,255,0.2);
+}
+.view-name { font-size: 17px; font-weight: 800; color: white; }
+.view-sub { font-size: 12px; color: rgba(255,255,255,0.7); margin-top: 3px; }
+.view-section { margin-bottom: 16px; }
+.view-section-title {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  color: var(--blue); margin-bottom: 10px; padding-bottom: 7px;
+  border-bottom: 2px solid var(--blue-light); letter-spacing: 0.6px;
+}
+.view-row {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding: 9px 0; border-bottom: 1px solid var(--gray-100);
+}
+.view-row:last-child { border-bottom: none; }
+.view-label { font-size: 12px; color: var(--gray-400); font-weight: 500; }
+.view-value { font-size: 13px; color: var(--gray-800); font-weight: 600; text-align: right; max-width: 60%; }
+
+/* CONFIRM */
+.confirm-modal { max-width: 100%; }
+.confirm-body { padding: 20px; text-align: center; }
+.confirm-icon {
+  width: 56px; height: 56px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; margin: 0 auto 14px;
+}
+.confirm-icon.danger { background: var(--red-light); color: var(--red); }
+.confirm-icon.success { background: var(--green-light); color: var(--green); }
+.confirm-title { font-size: 16px; font-weight: 700; color: var(--gray-800); margin-bottom: 6px; }
+.confirm-msg { font-size: 13px; color: var(--gray-500); line-height: 1.6; }
+
+/* TOAST */
+.toast {
+  position: absolute; bottom: 80px; left: 16px; right: 16px;
+  background: var(--gray-800); color: white;
+  padding: 12px 16px; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 500;
+  box-shadow: var(--shadow-lg); z-index: 999;
+  transform: translateY(20px); opacity: 0;
+  transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  display: flex; align-items: center; gap: 8px;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { background: var(--green); }
+.toast.error { background: var(--red); }
+
+/* Result count */
+.result-count { font-size: 11.5px; color: var(--gray-400); }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="screen">
+
+    <!-- STATUS BAR -->
+    <div class="status-bar" id="statusBar">
+      <div class="dynamic-island"></div>
+      <span class="status-time" id="clockTime">9:41</span>
+      <div class="status-icons">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+      </div>
+    </div>
+
+    <!-- SCROLL AREA -->
+    <div class="scroll-area">
+
+      <!-- ========== PAGE: BỆNH NHÂN ========== -->
+      <div id="page-patients" class="page active-page">
+        <div class="page-header">
+          <div class="page-header-row">
+            <div>
+              <div class="page-header-title">Bệnh Nhân</div>
+            </div>
+            <div class="topbar-user" style="width:36px;height:36px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:white;">NV</div>
+          </div>
+          <div class="search-header">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="searchInput" placeholder="Tìm tên, SĐT, mã BN, CCCD…" oninput="handleSearch(this.value)"/>
+          </div>
+        </div>
+        <div class="page-content">
+          <!-- Stats -->
+          <div class="stats-row">
+            <div class="stat-card">
+              <div class="stat-card-header">
+                <div class="stat-icon blue"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+              </div>
+              <div class="stat-value" id="totalCount">0</div>
+              <div class="stat-label">Tổng bệnh nhân</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-header">
+                <div class="stat-icon green"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+              </div>
+              <div class="stat-value" id="activeCount">0</div>
+              <div class="stat-label">Hoạt động</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-header">
+                <div class="stat-icon orange"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+              </div>
+              <div class="stat-value" id="todayCount">0</div>
+              <div class="stat-label">Hôm nay</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-header">
+                <div class="stat-icon red"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+              </div>
+              <div class="stat-value" id="inactiveCount">0</div>
+              <div class="stat-label">Vô hiệu</div>
+            </div>
+          </div>
+
+          <!-- Filter -->
+          <div class="filter-tabs" id="patientFilterTabs">
+            <button class="filter-tab active" onclick="filterByStatus('all',this)">Tất cả</button>
+            <button class="filter-tab" onclick="filterByStatus('active',this)">Hoạt động</button>
+            <button class="filter-tab" onclick="filterByStatus('inactive',this)">Vô hiệu</button>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span class="result-count" id="resultCount">Đang tải...</span>
+            <select id="genderFilter" onchange="applyFilters()" style="border:1.5px solid var(--gray-200);border-radius:20px;padding:5px 10px;font-size:11.5px;color:var(--gray-600);background:white;outline:none;">
+              <option value="">Tất cả giới tính</option>
+              <option value="Nam">Nam</option>
+              <option value="Nữ">Nữ</option>
+            </select>
+          </div>
+
+          <!-- Patient list -->
+          <div id="patientList"></div>
+          <div id="emptyState" class="empty-state" style="display:none;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            <p>Không tìm thấy bệnh nhân nào</p>
+          </div>
+          <div class="pagination" id="pagination"></div>
+        </div>
+      </div>
+
+      <!-- ========== PAGE: LỊCH HẸN ========== -->
+      <div id="page-appointments" class="page">
+        <div class="page-header">
+          <div class="page-header-row">
+            <div class="page-header-title">Lịch Hẹn</div>
+            <button class="header-action" onclick="openApptModal()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+          </div>
+          <div class="filter-tabs" style="background:transparent;padding:0;">
+            <button class="filter-tab active" style="background:rgba(255,255,255,0.25);border-color:transparent;color:white;" onclick="filterApptMobile('all',this)">Tất cả</button>
+            <button class="filter-tab" style="background:rgba(255,255,255,0.1);border-color:transparent;color:rgba(255,255,255,0.7);" onclick="filterApptMobile('pending',this)">Chờ khám</button>
+            <button class="filter-tab" style="background:rgba(255,255,255,0.1);border-color:transparent;color:rgba(255,255,255,0.7);" onclick="filterApptMobile('done',this)">Đã khám</button>
+            <button class="filter-tab" style="background:rgba(255,255,255,0.1);border-color:transparent;color:rgba(255,255,255,0.7);" onclick="filterApptMobile('cancelled',this)">Đã hủy</button>
+          </div>
+        </div>
+        <div class="page-content">
+          <div class="stats-row">
+            <div class="stat-card"><div class="stat-card-header"><div class="stat-icon blue"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div></div><div class="stat-value" id="apptTotal">0</div><div class="stat-label">Tổng lịch hẹn</div></div>
+            <div class="stat-card"><div class="stat-card-header"><div class="stat-icon orange"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div></div><div class="stat-value" id="apptToday">0</div><div class="stat-label">Hôm nay</div></div>
+            <div class="stat-card"><div class="stat-card-header"><div class="stat-icon green"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/></svg></div></div><div class="stat-value" id="apptDone">0</div><div class="stat-label">Đã khám</div></div>
+            <div class="stat-card"><div class="stat-card-header"><div class="stat-icon red"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div></div><div class="stat-value" id="apptCancelled">0</div><div class="stat-label">Đã hủy</div></div>
+          </div>
+          <div class="section-header">
+            <div class="section-title">Danh sách lịch hẹn</div>
+            <span class="result-count" id="apptResultCount">0 kết quả</span>
+          </div>
+          <div id="apptList"></div>
+          <div id="apptEmpty" class="empty-state" style="display:none;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/></svg><p>Không có lịch hẹn nào</p></div>
+          <div class="pagination" id="apptPagination"></div>
+        </div>
+      </div>
+
+      <!-- ========== PAGE: HỒ SƠ ========== -->
+      <div id="page-records" class="page">
+        <div class="page-header">
+          <div class="page-header-row">
+            <div class="page-header-title">Hồ Sơ Bệnh Án</div>
+          </div>
+          <div class="search-header">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="recordSearch" placeholder="Tìm tên hoặc mã bệnh nhân…" oninput="renderRecords()"/>
+          </div>
+        </div>
+        <div class="page-content">
+          <div id="recordsGrid"></div>
+          <div id="recordsEmpty" class="empty-state" style="display:none;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg><p>Không tìm thấy hồ sơ nào</p></div>
+        </div>
+      </div>
+
+      <!-- ========== PAGE: BÁO CÁO ========== -->
+      <div id="page-reports" class="page">
+        <div class="page-header">
+          <div class="page-header-row">
+            <div class="page-header-title">Báo Cáo</div>
+            <div style="display:flex;gap:6px;">
+              <select id="reportMonth" onchange="renderReports()" style="background:rgba(255,255,255,0.2);border:none;color:white;font-size:11px;font-weight:700;border-radius:8px;padding:4px 8px;outline:none;">
+                <option value="1">T1</option><option value="2">T2</option><option value="3">T3</option><option value="4">T4</option><option value="5">T5</option><option value="6">T6</option><option value="7">T7</option><option value="8">T8</option><option value="9">T9</option><option value="10">T10</option><option value="11">T11</option><option value="12">T12</option>
+              </select>
+              <select id="reportYear" onchange="renderReports()" style="background:rgba(255,255,255,0.2);border:none;color:white;font-size:11px;font-weight:700;border-radius:8px;padding:4px 8px;outline:none;">
+                <option value="2025">2025</option><option value="2026">2026</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="page-content">
+          <div class="report-stat-grid" id="reportStats"></div>
+          <div class="chart-card"><div class="chart-card-title">Bệnh nhân đăng ký theo tháng</div><div class="chart-wrap"><canvas id="chartMonthly"></canvas></div></div>
+          <div class="chart-card"><div class="chart-card-title">Phân bố giới tính</div><div class="chart-wrap" style="height:150px;"><canvas id="chartGender"></canvas></div></div>
+          <div class="chart-card"><div class="chart-card-title">Lịch hẹn theo trạng thái</div><div class="chart-wrap" style="height:150px;"><canvas id="chartApptStatus"></canvas></div></div>
+          <div class="top-doctor-card">
+            <div class="chart-card-title">Top bệnh nhân khám nhiều nhất</div>
+            <div id="topPatients"></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end scroll-area -->
+
+    <!-- BOTTOM NAV -->
+    <div class="bottom-nav">
+      <div class="nav-indicator" id="navIndicator" style="left:calc(12.5% - 20px);"></div>
+      <button class="nav-btn active" onclick="navigate('patients')" data-page="patients" id="nav-patients">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Bệnh Nhân</span>
+      </button>
+      <button class="nav-btn" onclick="navigate('appointments')" data-page="appointments" id="nav-appointments">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>Lịch Hẹn</span>
+      </button>
+      <button class="nav-btn" onclick="navigate('records')" data-page="records" id="nav-records">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span>Hồ Sơ</span>
+      </button>
+      <button class="nav-btn" onclick="navigate('reports')" data-page="reports" id="nav-reports">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span>Báo Cáo</span>
+      </button>
+    </div>
+
+    <!-- FAB -->
+    <button class="fab" id="fabBtn" onclick="openModal('add')">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+
+    <!-- MODAL BỆNH NHÂN -->
+    <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal">
+        <div class="modal-handle"></div>
+        <div class="modal-header">
+          <span class="modal-title" id="modalTitle">Thêm Bệnh Nhân</span>
+          <button class="modal-close" onclick="closeModal()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="modal-body">
+          <form id="patientForm" onsubmit="submitForm(event)" novalidate>
+            <input type="hidden" id="editId"/>
+            <div class="form-section">
+              <div class="form-section-title">Thông tin cơ bản</div>
+              <div class="form-group"><label>Họ và Tên <span class="required">*</span></label><input type="text" id="fName" placeholder="Nguyễn Văn A"/><span class="error-msg" id="errName"></span></div>
+              <div class="form-group"><label>Ngày Sinh <span class="required">*</span></label><input type="date" id="fDob"/><span class="error-msg" id="errDob"></span></div>
+              <div class="form-group"><label>Giới Tính <span class="required">*</span></label><select id="fGender"><option value="">-- Chọn --</option><option value="Nam">Nam</option><option value="Nữ">Nữ</option><option value="Khác">Khác</option></select><span class="error-msg" id="errGender"></span></div>
+              <div class="form-group"><label>Số Điện Thoại <span class="required">*</span></label><input type="tel" id="fPhone" placeholder="0901234567"/><span class="error-msg" id="errPhone"></span></div>
+              <div class="form-group"><label>Email</label><input type="email" id="fEmail" placeholder="example@email.com"/><span class="error-msg" id="errEmail"></span></div>
+            </div>
+            <div class="form-section">
+              <div class="form-section-title">Giấy tờ & Bảo hiểm</div>
+              <div class="form-group"><label>Số CCCD <span class="required">*</span></label><input type="text" id="fCccd" placeholder="079201001234"/><span class="error-msg" id="errCccd"></span></div>
+              <div class="form-group"><label>Số Thẻ BHYT</label><input type="text" id="fBhyt" placeholder="HS4010012345678"/></div>
+              <div class="form-group"><label>Hạn BHYT</label><input type="date" id="fBhytExp"/></div>
+              <div class="form-group"><label>Nhóm máu</label><select id="fBlood"><option value="">-- Chọn --</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select></div>
+            </div>
+            <div class="form-section">
+              <div class="form-section-title">Địa chỉ & Tiền sử</div>
+              <div class="form-group"><label>Địa Chỉ</label><input type="text" id="fAddress" placeholder="Số nhà, đường, quận, tỉnh/TP"/></div>
+              <div class="form-group"><label>Dị Ứng Thuốc</label><input type="text" id="fAllergy" placeholder="VD: Penicillin, Aspirin…"/></div>
+              <div class="form-group"><label>Tiền Sử Bệnh</label><textarea id="fHistory" rows="2" placeholder="VD: Tiểu đường type 2, tăng huyết áp…"></textarea></div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeModal()">Hủy</button>
+          <button type="submit" class="btn-primary" id="submitBtn" onclick="submitForm(event)">Lưu</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL XEM HỒ SƠ -->
+    <div class="modal-overlay" id="viewModalOverlay" onclick="if(event.target===this)closeViewModal()">
+      <div class="modal">
+        <div class="modal-handle"></div>
+        <div class="modal-header">
+          <span class="modal-title">Hồ Sơ Bệnh Nhân</span>
+          <button class="modal-close" onclick="closeViewModal()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="modal-body" id="viewModalBody"></div>
+        <div class="modal-footer" id="viewModalFooter"></div>
+      </div>
+    </div>
+
+    <!-- MODAL LỊCH HẸN -->
+    <div class="modal-overlay" id="apptModalOverlay" onclick="if(event.target===this)closeApptModal()">
+      <div class="modal">
+        <div class="modal-handle"></div>
+        <div class="modal-header">
+          <span class="modal-title" id="apptModalTitle">Đặt Lịch Hẹn</span>
+          <button class="modal-close" onclick="closeApptModal()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="modal-body">
+          <form id="apptForm" onsubmit="submitAppt(event)" novalidate>
+            <input type="hidden" id="apptEditId"/>
+            <div class="form-section">
+              <div class="form-section-title">Thông tin lịch hẹn</div>
+              <div class="form-group"><label>Bệnh Nhân <span class="required">*</span></label><select id="apptPatient"><option value="">-- Chọn bệnh nhân --</option></select><span class="error-msg" id="errApptPatient"></span></div>
+              <div class="form-group"><label>Bác Sĩ <span class="required">*</span></label><select id="apptDoctor"><option value="">-- Chọn bác sĩ --</option><option>BS. Nguyễn Văn Minh – Nội khoa</option><option>BS. Trần Thị Hương – Nhi khoa</option><option>BS. Lê Quốc Bảo – Ngoại khoa</option><option>BS. Phạm Thị Lan – Sản phụ khoa</option><option>BS. Hoàng Minh Tuấn – Da liễu</option><option>BS. Võ Thị Thu – Răng Hàm Mặt</option></select><span class="error-msg" id="errApptDoctor"></span></div>
+              <div class="form-group"><label>Ngày Hẹn <span class="required">*</span></label><input type="date" id="apptDate"/><span class="error-msg" id="errApptDate"></span></div>
+              <div class="form-group"><label>Giờ Hẹn <span class="required">*</span></label><select id="apptTime"><option value="">-- Chọn giờ --</option><option>07:30</option><option>08:00</option><option>08:30</option><option>09:00</option><option>09:30</option><option>10:00</option><option>10:30</option><option>11:00</option><option>13:30</option><option>14:00</option><option>14:30</option><option>15:00</option><option>15:30</option><option>16:00</option><option>16:30</option></select><span class="error-msg" id="errApptTime"></span></div>
+              <div class="form-group"><label>Lý Do Khám</label><input type="text" id="apptReason" placeholder="VD: Khám tổng quát, tái khám…"/></div>
+              <div class="form-group"><label>Ghi Chú</label><textarea id="apptNote" rows="2" placeholder="Ghi chú thêm…"></textarea></div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeApptModal()">Hủy</button>
+          <button type="button" class="btn-primary" onclick="submitAppt(event)">Lưu lịch hẹn</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONFIRM -->
+    <div class="modal-overlay" id="confirmOverlay">
+      <div class="modal confirm-modal">
+        <div class="modal-handle"></div>
+        <div class="confirm-body">
+          <div class="confirm-icon" id="confirmIcon"></div>
+          <div class="confirm-title" id="confirmTitle">Xác nhận</div>
+          <div class="confirm-msg" id="confirmMsg"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" onclick="closeConfirm()">Hủy</button>
+          <button class="btn-danger" id="confirmBtn">Xác nhận</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
+
+  </div><!-- end screen -->
+</div><!-- end phone -->
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// ==================== STORAGE KEYS ====================
+const SK_PATIENTS = 'medcare_patients';
+const SK_APPTS    = 'medcare_appointments';
+
+const SAMPLE_PATIENTS = [
+  { id:'BN000001', name:'Nguyễn Thị Lan', dob:'1990-05-15', gender:'Nữ', phone:'0901234567', email:'lan.nguyen@email.com', cccd:'079190001234', bhyt:'HS4010012345678', bhytExp:'2025-12-31', blood:'A+', address:'12 Nguyễn Huệ, Q1, TP.HCM', allergy:'', history:'Không có', status:'active', createdAt:'2025-01-10' },
+  { id:'BN000002', name:'Trần Văn Bình', dob:'1985-08-22', gender:'Nam', phone:'0912345678', email:'binh.tran@email.com', cccd:'079185002345', bhyt:'HS4010023456789', bhytExp:'2025-06-30', blood:'O+', address:'45 Lê Lợi, Q3, TP.HCM', allergy:'Penicillin', history:'Tiểu đường type 2', status:'active', createdAt:'2025-01-12' },
+  { id:'BN000003', name:'Lê Thị Hoa', dob:'1978-03-10', gender:'Nữ', phone:'0923456789', email:'hoa.le@email.com', cccd:'079178003456', bhyt:'', bhytExp:'', blood:'B+', address:'88 CMT8, Tân Bình', allergy:'Aspirin', history:'Tăng huyết áp', status:'active', createdAt:'2025-01-15' },
+  { id:'BN000004', name:'Phạm Quốc Hùng', dob:'2001-11-05', gender:'Nam', phone:'0934567890', email:'', cccd:'079201004567', bhyt:'HS4010034567890', bhytExp:'2026-03-31', blood:'AB+', address:'22 Đinh Tiên Hoàng, Bình Thạnh', allergy:'', history:'Không có', status:'active', createdAt:'2025-01-18' },
+  { id:'BN000005', name:'Võ Thị Mai', dob:'1965-07-25', gender:'Nữ', phone:'0945678901', email:'mai.vo@email.com', cccd:'079165005678', bhyt:'HS4010045678901', bhytExp:'2024-12-31', blood:'O-', address:'67 Hoàng Văn Thụ, Phú Nhuận', allergy:'Sulfonamide', history:'Bệnh tim mạch', status:'inactive', createdAt:'2025-01-20' },
+  { id:'BN000006', name:'Đặng Minh Tuấn', dob:'1995-02-14', gender:'Nam', phone:'0956789012', email:'tuan.dang@email.com', cccd:'079195006789', bhyt:'HS4010056789012', bhytExp:'2025-09-30', blood:'B-', address:'134 Nguyễn Trãi, Q5', allergy:'', history:'Hen suyễn', status:'active', createdAt:'2025-01-22' },
+  { id:'BN000007', name:'Bùi Thị Thanh', dob:'1982-09-18', gender:'Nữ', phone:'0967890123', email:'thanh.bui@email.com', cccd:'079182007890', bhyt:'', bhytExp:'', blood:'A-', address:'56 Trường Chinh, Tân Phú', allergy:'Latex', history:'Viêm da dị ứng', status:'active', createdAt:'2025-02-01' },
+  { id:'BN000008', name:'Hoàng Văn Nam', dob:'1973-12-30', gender:'Nam', phone:'0978901234', email:'nam.hoang@email.com', cccd:'079173008901', bhyt:'HS4010078901234', bhytExp:'2025-12-31', blood:'AB-', address:'90 Bạch Đằng, Bình Thạnh', allergy:'Penicillin', history:'Gout, tăng huyết áp', status:'active', createdAt:'2025-02-03' },
+  { id:'BN000009', name:'Lý Thị Bích', dob:'2005-04-08', gender:'Nữ', phone:'0989012345', email:'bich.ly@email.com', cccd:'079205009012', bhyt:'HS4010089012345', bhytExp:'2026-06-30', blood:'O+', address:'11 Lý Tự Trọng, Q1', allergy:'', history:'Không có', status:'active', createdAt:'2025-02-05' },
+  { id:'BN000010', name:'Ngô Thành Đạt', dob:'1988-06-22', gender:'Nam', phone:'0990123456', email:'dat.ngo@email.com', cccd:'079188010123', bhyt:'HS4010090123456', bhytExp:'2025-03-31', blood:'B+', address:'78 Nguyễn Đình Chiểu, Q3', allergy:'', history:'Không có', status:'inactive', createdAt:'2025-02-08' },
+  { id:'BN000011', name:'Trịnh Thị Cúc', dob:'1960-01-17', gender:'Nữ', phone:'0901111222', email:'cuc.trinh@email.com', cccd:'079160011234', bhyt:'HS4010091234567', bhytExp:'2025-12-31', blood:'A+', address:'25 Điện Biên Phủ, Q10', allergy:'Codeine', history:'Đái tháo đường, loãng xương', status:'active', createdAt:'2025-02-10' },
+  { id:'BN000012', name:'Phan Văn Khoa', dob:'1999-10-03', gender:'Nam', phone:'0902222333', email:'khoa.phan@gmail.com', cccd:'079199012345', bhyt:'', bhytExp:'', blood:'O+', address:'150 Cộng Hòa, Tân Bình', allergy:'', history:'Không có', status:'active', createdAt: new Date().toISOString().slice(0,10) },
+];
+const SAMPLE_APPTS = [
+  { id:'LH000001', patientId:'BN000001', doctor:'BS. Nguyễn Văn Minh – Nội khoa', date:'2025-06-10', time:'08:00', reason:'Khám tổng quát', note:'', status:'done' },
+  { id:'LH000002', patientId:'BN000002', doctor:'BS. Trần Thị Hương – Nhi khoa', date:'2025-06-12', time:'09:30', reason:'Tái khám tiểu đường', note:'Nhịn ăn trước khám', status:'done' },
+  { id:'LH000003', patientId:'BN000003', doctor:'BS. Lê Quốc Bảo – Ngoại khoa', date:'2025-06-15', time:'10:00', reason:'Đau khớp gối', note:'', status:'pending' },
+  { id:'LH000004', patientId:'BN000004', doctor:'BS. Hoàng Minh Tuấn – Da liễu', date:'2025-06-16', time:'14:00', reason:'Nổi mẩn ngứa', note:'', status:'pending' },
+  { id:'LH000008', patientId:'BN000001', doctor:'BS. Trần Thị Hương', date: new Date().toISOString().slice(0,10), time:'10:30', reason:'Khám định kỳ', note:'', status:'pending' },
+  { id:'LH000009', patientId:'BN000009', doctor:'BS. Phạm Thị Lan – Sản phụ khoa', date: new Date().toISOString().slice(0,10), time:'13:30', reason:'Khám phụ khoa', note:'', status:'pending' },
+  { id:'LH000010', patientId:'BN000006', doctor:'BS. Nguyễn Văn Minh – Nội khoa', date: new Date().toISOString().slice(0,10), time:'14:30', reason:'Tái khám hen suyễn', note:'', status:'cancelled' },
+];
+
+// STATE
+let patients=[], appointments=[];
+let currentPage=1, apptPage=1;
+const PAGE_SIZE=6;
+let filterStatus='all', filterGender='', searchQuery='';
+let apptFilterStatus='all';
+let confirmCallback=null, idCounter=0, apptCounter=0;
+let chartMonthly=null, chartGender=null, chartApptStatus=null;
+
+// CLOCK
+function updateClock(){
+  const n=new Date();
+  document.getElementById('clockTime').textContent=n.getHours()+':'+String(n.getMinutes()).padStart(2,'0');
+}
+updateClock(); setInterval(updateClock,30000);
+
+// INIT
+function init(){
+  const sp=localStorage.getItem(SK_PATIENTS);
+  const sa=localStorage.getItem(SK_APPTS);
+  patients=sp?JSON.parse(sp):SAMPLE_PATIENTS;
+  appointments=sa?JSON.parse(sa):SAMPLE_APPTS;
+  idCounter=patients.length; apptCounter=appointments.length;
+  if(!sp)savePatients(); if(!sa)saveAppts();
+  const now=new Date();
+  document.getElementById('reportMonth').value=now.getMonth()+1;
+  document.getElementById('reportYear').value=now.getFullYear();
+  navigate('patients');
+}
+function savePatients(){localStorage.setItem(SK_PATIENTS,JSON.stringify(patients));}
+function saveAppts(){localStorage.setItem(SK_APPTS,JSON.stringify(appointments));}
+
+// NAVIGATION
+function navigate(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active-page'));
+  document.querySelectorAll('.nav-btn').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active-page');
+  const navBtn=document.getElementById('nav-'+page);
+  if(navBtn) navBtn.classList.add('active');
+
+  // Move nav indicator
+  const pages=['patients','appointments','records','reports'];
+  const idx=pages.indexOf(page);
+  const indicator=document.getElementById('navIndicator');
+  if(indicator) indicator.style.left=`calc(${(idx*25)+12.5}% - 20px)`;
+
+  // Show/hide FAB
+  const fab=document.getElementById('fabBtn');
+  if(page==='patients') fab.style.display='flex';
+  else if(page==='appointments'){fab.style.display='flex'; fab.onclick=()=>openApptModal();}
+  else fab.style.display='none';
+  if(page==='patients') fab.onclick=()=>openModal('add');
+
+  if(page==='patients') renderAll();
+  if(page==='appointments'){populateApptPatients();renderApptList();updateApptStats();}
+  if(page==='records') renderRecords();
+  if(page==='reports') renderReports();
+}
+
+// ============ PATIENTS ============
+function renderAll(){updateStats();renderPatientList();}
+
+function updateStats(){
+  const active=patients.filter(p=>p.status==='active').length;
+  const inactive=patients.filter(p=>p.status==='inactive').length;
+  const today=new Date().toISOString().slice(0,10);
+  const todayReg=patients.filter(p=>p.createdAt===today).length;
+  document.getElementById('totalCount').textContent=patients.length;
+  document.getElementById('activeCount').textContent=active;
+  document.getElementById('inactiveCount').textContent=inactive;
+  document.getElementById('todayCount').textContent=todayReg;
+}
+
+function getFiltered(){
+  return patients.filter(p=>{
+    const ms=filterStatus==='all'||p.status===filterStatus;
+    const mg=!filterGender||p.gender===filterGender;
+    const q=searchQuery.toLowerCase();
+    const mq=!q||p.name.toLowerCase().includes(q)||p.phone.includes(q)||p.id.toLowerCase().includes(q)||(p.cccd&&p.cccd.includes(q));
+    return ms&&mg&&mq;
+  });
+}
+
+function renderPatientList(){
+  const filtered=getFiltered();
+  const totalPages=Math.max(1,Math.ceil(filtered.length/PAGE_SIZE));
+  if(currentPage>totalPages)currentPage=1;
+  const pageData=filtered.slice((currentPage-1)*PAGE_SIZE,currentPage*PAGE_SIZE);
+  document.getElementById('resultCount').textContent=filtered.length+' kết quả';
+  const list=document.getElementById('patientList');
+  const empty=document.getElementById('emptyState');
+  if(!pageData.length){list.innerHTML='';empty.style.display='block';document.getElementById('pagination').innerHTML='';return;}
+  empty.style.display='none';
+  list.innerHTML=pageData.map(p=>{
+    const initials=p.name.split(' ').slice(-2).map(n=>n[0]).join('').toUpperCase();
+    const color=strColor(p.name);
+    const gBadge=p.gender==='Nam'?'<span class="badge badge-male">Nam</span>':'<span class="badge badge-female">Nữ</span>';
+    const sBadge=p.status==='active'?'<span class="badge badge-active">● Hoạt động</span>':'<span class="badge badge-inactive">○ Vô hiệu</span>';
+    return `<div class="patient-card" style="margin-bottom:10px;" onclick="viewPatient('${p.id}')">
+      <div class="patient-avatar" style="background:${color}">${initials}</div>
+      <div class="patient-info">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+          <div class="patient-name">${esc(p.name)}</div>
+          <span class="patient-id-badge">${p.id.slice(-5)}</span>
+        </div>
+        <div class="patient-meta">${fmtDate(p.dob)} · ${p.gender} · ${esc(p.phone)}</div>
+        <div class="patient-status" style="display:flex;gap:6px;margin-top:5px;">${gBadge}${sBadge}</div>
+      </div>
+      <svg class="patient-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>`;
+  }).join('');
+  renderPagination(totalPages,'pagination',currentPage,p=>{currentPage=p;renderPatientList();});
+}
+
+function handleSearch(v){searchQuery=v;currentPage=1;renderPatientList();}
+function filterByStatus(s,btn){
+  filterStatus=s;currentPage=1;
+  document.querySelectorAll('#patientFilterTabs .filter-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPatientList();
+}
+function applyFilters(){filterGender=document.getElementById('genderFilter').value;currentPage=1;renderPatientList();}
+
+// MODAL
+function openModal(mode,id=null){
+  resetForm();
+  const title=document.getElementById('modalTitle');
+  const submitBtn=document.getElementById('submitBtn');
+  if(mode==='edit'&&id){
+    const p=patients.find(x=>x.id===id);
+    if(!p)return;
+    title.textContent='Chỉnh Sửa Bệnh Nhân'; submitBtn.textContent='Cập nhật';
+    document.getElementById('editId').value=p.id;
+    document.getElementById('fName').value=p.name;
+    document.getElementById('fDob').value=p.dob;
+    document.getElementById('fGender').value=p.gender;
+    document.getElementById('fPhone').value=p.phone;
+    document.getElementById('fEmail').value=p.email||'';
+    document.getElementById('fCccd').value=p.cccd;
+    document.getElementById('fBhyt').value=p.bhyt||'';
+    document.getElementById('fBhytExp').value=p.bhytExp||'';
+    document.getElementById('fBlood').value=p.blood||'';
+    document.getElementById('fAddress').value=p.address||'';
+    document.getElementById('fAllergy').value=p.allergy||'';
+    document.getElementById('fHistory').value=p.history||'';
+  } else {
+    title.textContent='Thêm Bệnh Nhân'; submitBtn.textContent='Lưu';
+  }
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('open');resetForm();}
+function resetForm(){
+  document.getElementById('patientForm').reset();
+  document.getElementById('editId').value='';
+  ['Name','Dob','Gender','Phone','Cccd','Email'].forEach(f=>{
+    const el=document.getElementById('f'+f);if(el)el.classList.remove('error');
+    const er=document.getElementById('err'+f);if(er)er.textContent='';
+  });
+}
+function submitForm(e){
+  e.preventDefault();
+  if(!validateForm())return;
+  const id=document.getElementById('editId').value;
+  const data={
+    name:document.getElementById('fName').value.trim(),
+    dob:document.getElementById('fDob').value,
+    gender:document.getElementById('fGender').value,
+    phone:document.getElementById('fPhone').value.trim(),
+    email:document.getElementById('fEmail').value.trim(),
+    cccd:document.getElementById('fCccd').value.trim(),
+    bhyt:document.getElementById('fBhyt').value.trim(),
+    bhytExp:document.getElementById('fBhytExp').value,
+    blood:document.getElementById('fBlood').value,
+    address:document.getElementById('fAddress').value.trim(),
+    allergy:document.getElementById('fAllergy').value.trim(),
+    history:document.getElementById('fHistory').value.trim(),
+  };
+  if(id){
+    const idx=patients.findIndex(p=>p.id===id);
+    if(idx!==-1){patients[idx]={...patients[idx],...data};savePatients();closeModal();renderAll();showToast('Đã cập nhật bệnh nhân!','success');}
+  } else {
+    if(patients.some(p=>p.phone===data.phone)){setError('Phone','Số điện thoại đã tồn tại');return;}
+    if(patients.some(p=>p.cccd===data.cccd&&data.cccd)){setError('Cccd','Số CCCD đã tồn tại');return;}
+    idCounter++;
+    patients.unshift({id:'BN'+String(idCounter).padStart(6,'0'),...data,status:'active',createdAt:new Date().toISOString().slice(0,10)});
+    savePatients();closeModal();renderAll();showToast('Đã thêm bệnh nhân '+data.name+'!','success');
+  }
+}
+function validateForm(){
+  let ok=true;clearErrors();
+  const name=document.getElementById('fName').value.trim();
+  const dob=document.getElementById('fDob').value;
+  const gender=document.getElementById('fGender').value;
+  const phone=document.getElementById('fPhone').value.trim();
+  const cccd=document.getElementById('fCccd').value.trim();
+  const email=document.getElementById('fEmail').value.trim();
+  if(!name||name.length<2){setError('Name','Vui lòng nhập họ tên');ok=false;}
+  if(!dob){setError('Dob','Vui lòng chọn ngày sinh');ok=false;}
+  if(!gender){setError('Gender','Vui lòng chọn giới tính');ok=false;}
+  if(!phone||!/^0[35789][0-9]{8}$/.test(phone)){setError('Phone','SĐT không hợp lệ (VD: 0901234567)');ok=false;}
+  if(!cccd||!/^[0-9]{9,12}$/.test(cccd)){setError('Cccd','CCCD phải có 9 hoặc 12 chữ số');ok=false;}
+  if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){setError('Email','Email không đúng định dạng');ok=false;}
+  return ok;
+}
+function setError(f,m){const i=document.getElementById('f'+f);if(i)i.classList.add('error');const e=document.getElementById('err'+f);if(e)e.textContent=m;}
+function clearErrors(){['Name','Dob','Gender','Phone','Cccd','Email'].forEach(f=>{const i=document.getElementById('f'+f);if(i)i.classList.remove('error');const e=document.getElementById('err'+f);if(e)e.textContent='';});}
+
+function confirmToggle(id){
+  const p=patients.find(x=>x.id===id);if(!p)return;
+  const isA=p.status==='active';
+  showConfirm(isA?'danger':'success',isA?'Vô hiệu hóa?':'Khôi phục?',
+    isA?`Vô hiệu hóa bệnh nhân <strong>${esc(p.name)}</strong>?`:`Khôi phục bệnh nhân <strong>${esc(p.name)}</strong>?`,
+    ()=>{
+      const idx=patients.findIndex(x=>x.id===id);
+      const wasA=patients[idx].status==='active';
+      patients[idx].status=wasA?'inactive':'active';
+      savePatients();renderAll();
+      showToast(wasA?'Đã vô hiệu hóa!':'Đã khôi phục!',wasA?'error':'success');
+    });
+}
+
+function viewPatient(id){
+  const p=patients.find(x=>x.id===id);if(!p)return;
+  const initials=p.name.split(' ').slice(-2).map(n=>n[0]).join('').toUpperCase();
+  const color=strColor(p.name);
+  const apptCount=appointments.filter(a=>a.patientId===p.id).length;
+  document.getElementById('viewModalBody').innerHTML=`
+    <div class="view-header">
+      <div class="view-avatar" style="background:${color}">${initials}</div>
+      <div>
+        <div class="view-name">${esc(p.name)}</div>
+        <div class="view-sub">${p.id} · Đăng ký: ${fmtDate(p.createdAt)}</div>
+        <div style="margin-top:6px">${p.status==='active'?'<span class="badge badge-active">● Hoạt động</span>':'<span class="badge badge-inactive">○ Vô hiệu</span>'}</div>
+      </div>
+    </div>
+    <div class="view-section"><div class="view-section-title">Thông tin cơ bản</div>
+      <div class="view-row"><span class="view-label">Ngày Sinh</span><span class="view-value">${fmtDate(p.dob)} (${age(p.dob)} tuổi)</span></div>
+      <div class="view-row"><span class="view-label">Giới Tính</span><span class="view-value">${p.gender}</span></div>
+      <div class="view-row"><span class="view-label">Số ĐT</span><span class="view-value">${esc(p.phone)}</span></div>
+      <div class="view-row"><span class="view-label">Email</span><span class="view-value">${p.email||'—'}</span></div>
+      <div class="view-row"><span class="view-label">Địa Chỉ</span><span class="view-value">${p.address||'—'}</span></div>
+      <div class="view-row"><span class="view-label">Tổng lịch hẹn</span><span class="view-value">${apptCount} lần</span></div>
+    </div>
+    <div class="view-section"><div class="view-section-title">Giấy tờ & Bảo hiểm</div>
+      <div class="view-row"><span class="view-label">CCCD</span><span class="view-value">${esc(p.cccd)}</span></div>
+      <div class="view-row"><span class="view-label">Nhóm Máu</span><span class="view-value">${p.blood||'—'}</span></div>
+      <div class="view-row"><span class="view-label">Thẻ BHYT</span><span class="view-value">${p.bhyt||'—'}</span></div>
+      <div class="view-row"><span class="view-label">Hạn BHYT</span><span class="view-value">${p.bhytExp?fmtDate(p.bhytExp):'—'}</span></div>
+    </div>
+    <div class="view-section"><div class="view-section-title">Tiền sử bệnh</div>
+      <div class="view-row"><span class="view-label">Dị Ứng</span><span class="view-value" style="color:${p.allergy?'var(--red)':'inherit'}">${p.allergy||'Không có'}</span></div>
+      <div class="view-row"><span class="view-label">Bệnh Mãn Tính</span><span class="view-value">${p.history||'Không có'}</span></div>
+    </div>`;
+  document.getElementById('viewModalFooter').innerHTML=`
+    <button class="btn-secondary" onclick="closeViewModal();confirmToggle('${p.id}')">${p.status==='active'?'Vô hiệu hóa':'Khôi phục'}</button>
+    <button class="btn-primary" onclick="closeViewModal();openModal('edit','${p.id}')">Chỉnh sửa</button>`;
+  document.getElementById('viewModalOverlay').classList.add('open');
+}
+function closeViewModal(){document.getElementById('viewModalOverlay').classList.remove('open');}
+
+// ============ APPOINTMENTS ============
+function populateApptPatients(){
+  const sel=document.getElementById('apptPatient');
+  const cur=sel.value;
+  sel.innerHTML='<option value="">-- Chọn bệnh nhân --</option>';
+  patients.filter(p=>p.status==='active').forEach(p=>{
+    const opt=document.createElement('option');
+    opt.value=p.id; opt.textContent=p.name+' ('+p.id+')';
+    sel.appendChild(opt);
+  });
+  sel.value=cur;
+}
+
+function getFilteredAppts(){
+  return appointments.filter(a=>apptFilterStatus==='all'||a.status===apptFilterStatus);
+}
+
+function updateApptStats(){
+  const today=new Date().toISOString().slice(0,10);
+  document.getElementById('apptTotal').textContent=appointments.length;
+  document.getElementById('apptToday').textContent=appointments.filter(a=>a.date===today).length;
+  document.getElementById('apptDone').textContent=appointments.filter(a=>a.status==='done').length;
+  document.getElementById('apptCancelled').textContent=appointments.filter(a=>a.status==='cancelled').length;
+}
+
+function renderApptList(){
+  const filtered=getFilteredAppts().sort((a,b)=>b.date.localeCompare(a.date));
+  const totalPages=Math.max(1,Math.ceil(filtered.length/PAGE_SIZE));
+  if(apptPage>totalPages)apptPage=1;
+  const pageData=filtered.slice((apptPage-1)*PAGE_SIZE,apptPage*PAGE_SIZE);
+  document.getElementById('apptResultCount').textContent=filtered.length+' kết quả';
+  const list=document.getElementById('apptList');
+  const empty=document.getElementById('apptEmpty');
+  if(!pageData.length){list.innerHTML='';empty.style.display='block';document.getElementById('apptPagination').innerHTML='';return;}
+  empty.style.display='none';
+  const statusMap={pending:['badge-pending','Chờ khám'],done:['badge-done','Đã khám'],cancelled:['badge-cancelled','Đã hủy']};
+  list.innerHTML=pageData.map(a=>{
+    const p=patients.find(x=>x.id===a.patientId);
+    const pName=p?esc(p.name):'Không rõ';
+    const [cls,label]=statusMap[a.status]||['','Không rõ'];
+    const borderColor=a.status==='done'?'var(--green)':a.status==='cancelled'?'var(--red)':'var(--blue)';
+    const actions=a.status==='pending'?`
+      <button onclick="event.stopPropagation();markApptDone('${a.id}')" style="padding:5px 10px;font-size:11px;font-weight:700;background:var(--green-light);color:var(--green);border:none;border-radius:8px;cursor:pointer;">✓ Đã khám</button>
+      <button onclick="event.stopPropagation();cancelAppt('${a.id}')" style="padding:5px 10px;font-size:11px;font-weight:700;background:var(--red-light);color:var(--red);border:none;border-radius:8px;cursor:pointer;">✕ Hủy</button>`
+      :`<span class="badge ${cls}">${label}</span>`;
+    return `<div class="appt-card ${a.status}" style="margin-bottom:10px;border-left-color:${borderColor}">
+      <div class="appt-time-col">
+        <div class="appt-time" style="color:${borderColor}">${a.time}</div>
+        <div class="appt-date">${fmtDate(a.date)}</div>
+      </div>
+      <div class="appt-divider"></div>
+      <div class="appt-info">
+        <div class="appt-patient">${pName}</div>
+        <div class="appt-doctor">${esc(a.doctor)}</div>
+        <div class="appt-reason">${a.reason||'—'}</div>
+        <div class="appt-footer">${actions}</div>
+      </div>
+    </div>`;
+  }).join('');
+  renderPagination(totalPages,'apptPagination',apptPage,p=>{apptPage=p;renderApptList();});
+}
+
+function filterApptMobile(s,btn){
+  apptFilterStatus=s; apptPage=1;
+  // style active tab in header
+  btn.closest('.filter-tabs').querySelectorAll('.filter-tab').forEach(b=>{
+    b.style.background='rgba(255,255,255,0.1)';b.style.color='rgba(255,255,255,0.7)';b.style.borderColor='transparent';
+  });
+  btn.style.background='rgba(255,255,255,0.25)';btn.style.color='white';btn.style.borderColor='transparent';
+  renderApptList();
+}
+
+function markApptDone(id){
+  showConfirm('success','Xác nhận đã khám?','Đánh dấu lịch hẹn này là Đã khám?',()=>{
+    const idx=appointments.findIndex(a=>a.id===id);
+    if(idx!==-1){appointments[idx].status='done';saveAppts();updateApptStats();renderApptList();showToast('Đã cập nhật!','success');}
+  });
+}
+function cancelAppt(id){
+  const a=appointments.find(x=>x.id===id);
+  const p=patients.find(x=>x.id===a?.patientId);
+  showConfirm('danger','Hủy lịch hẹn?',`Hủy lịch của <strong>${p?esc(p.name):'bệnh nhân'}</strong>?`,()=>{
+    const idx=appointments.findIndex(x=>x.id===id);
+    if(idx!==-1){appointments[idx].status='cancelled';saveAppts();updateApptStats();renderApptList();showToast('Đã hủy lịch hẹn!','error');}
+  });
+}
+
+function openApptModal(id=null){
+  document.getElementById('apptForm').reset();
+  document.getElementById('apptEditId').value='';
+  document.getElementById('apptModalTitle').textContent=id?'Chỉnh Sửa Lịch Hẹn':'Đặt Lịch Hẹn';
+  populateApptPatients();
+  if(id){
+    const a=appointments.find(x=>x.id===id);
+    if(a){
+      document.getElementById('apptEditId').value=a.id;
+      document.getElementById('apptPatient').value=a.patientId;
+      document.getElementById('apptDoctor').value=a.doctor;
+      document.getElementById('apptDate').value=a.date;
+      document.getElementById('apptTime').value=a.time;
+      document.getElementById('apptReason').value=a.reason;
+      document.getElementById('apptNote').value=a.note;
+    }
+  }
+  document.getElementById('apptModalOverlay').classList.add('open');
+}
+function closeApptModal(){document.getElementById('apptModalOverlay').classList.remove('open');}
+function submitAppt(e){
+  e.preventDefault();
+  const patientId=document.getElementById('apptPatient').value;
+  const doctor=document.getElementById('apptDoctor').value;
+  const date=document.getElementById('apptDate').value;
+  const time=document.getElementById('apptTime').value;
+  let ok=true;
+  if(!patientId){document.getElementById('errApptPatient').textContent='Chọn bệnh nhân';ok=false;}else document.getElementById('errApptPatient').textContent='';
+  if(!doctor){document.getElementById('errApptDoctor').textContent='Chọn bác sĩ';ok=false;}else document.getElementById('errApptDoctor').textContent='';
+  if(!date){document.getElementById('errApptDate').textContent='Chọn ngày hẹn';ok=false;}else document.getElementById('errApptDate').textContent='';
+  if(!time){document.getElementById('errApptTime').textContent='Chọn giờ hẹn';ok=false;}else document.getElementById('errApptTime').textContent='';
+  if(!ok)return;
+  const id=document.getElementById('apptEditId').value;
+  const data={patientId,doctor,date,time,reason:document.getElementById('apptReason').value.trim(),note:document.getElementById('apptNote').value.trim()};
+  if(id){
+    const idx=appointments.findIndex(a=>a.id===id);
+    if(idx!==-1){appointments[idx]={...appointments[idx],...data};saveAppts();closeApptModal();updateApptStats();renderApptList();showToast('Đã cập nhật lịch hẹn!','success');}
+  } else {
+    apptCounter++;
+    appointments.unshift({id:'LH'+String(apptCounter).padStart(6,'0'),...data,status:'pending'});
+    saveAppts();closeApptModal();updateApptStats();renderApptList();showToast('Đã đặt lịch hẹn!','success');
+  }
+}
+
+// ============ RECORDS ============
+function renderRecords(){
+  const q=(document.getElementById('recordSearch')?.value||'').toLowerCase();
+  const filtered=patients.filter(p=>!q||p.name.toLowerCase().includes(q)||p.id.toLowerCase().includes(q));
+  const grid=document.getElementById('recordsGrid');
+  const empty=document.getElementById('recordsEmpty');
+  if(!filtered.length){grid.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  grid.innerHTML=filtered.map(p=>{
+    const initials=p.name.split(' ').slice(-2).map(n=>n[0]).join('').toUpperCase();
+    const color=strColor(p.name);
+    const apptList=appointments.filter(a=>a.patientId===p.id);
+    const lastAppt=apptList.sort((a,b)=>b.date.localeCompare(a.date))[0];
+    return `<div class="record-card" style="margin-bottom:10px;">
+      <div class="record-top">
+        <div class="record-avatar" style="background:${color}">${initials}</div>
+        <div style="flex:1;min-width:0;">
+          <div class="record-name">${esc(p.name)}</div>
+          <div class="record-sub">${p.id} · ${age(p.dob)} tuổi · ${p.gender}</div>
+          <div style="margin-top:4px">${p.status==='active'?'<span class="badge badge-active">● Hoạt động</span>':'<span class="badge badge-inactive">○ Vô hiệu</span>'}</div>
+        </div>
+      </div>
+      <div class="record-grid">
+        <div class="record-item"><div class="record-item-label">Số ĐT</div><div class="record-item-value">${esc(p.phone)}</div></div>
+        <div class="record-item"><div class="record-item-label">Nhóm máu</div><div class="record-item-value">${p.blood||'—'}</div></div>
+        <div class="record-item"><div class="record-item-label">Dị ứng</div><div class="record-item-value" style="color:${p.allergy?'var(--red)':'inherit'}">${p.allergy||'Không có'}</div></div>
+        <div class="record-item"><div class="record-item-label">Lần khám cuối</div><div class="record-item-value">${lastAppt?fmtDate(lastAppt.date):'Chưa khám'}</div></div>
+      </div>
+      <div class="record-footer-btns">
+        <button class="btn-secondary" style="padding:9px;font-size:12px;" onclick="openModal('edit','${p.id}')">Chỉnh sửa</button>
+        <button class="btn-primary" style="padding:9px;font-size:12px;" onclick="viewPatient('${p.id}')">Xem hồ sơ</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ============ REPORTS ============
+function renderReports(){
+  const month=parseInt(document.getElementById('reportMonth').value);
+  const year=parseInt(document.getElementById('reportYear').value);
+  const activePat=patients.filter(p=>p.status==='active').length;
+  const totalAppt=appointments.length;
+  const doneAppt=appointments.filter(a=>a.status==='done').length;
+  const monthAppt=appointments.filter(a=>{const d=new Date(a.date);return d.getMonth()+1===month&&d.getFullYear()===year;}).length;
+  document.getElementById('reportStats').innerHTML=`
+    <div class="report-stat-card"><div class="report-stat-value" style="color:var(--blue)">${patients.length}</div><div class="report-stat-label">Tổng bệnh nhân</div></div>
+    <div class="report-stat-card"><div class="report-stat-value" style="color:var(--green)">${activePat}</div><div class="report-stat-label">Đang hoạt động</div></div>
+    <div class="report-stat-card"><div class="report-stat-value" style="color:var(--accent)">${monthAppt}</div><div class="report-stat-label">Lịch hẹn T${month}</div></div>
+    <div class="report-stat-card"><div class="report-stat-value" style="color:var(--green)">${doneAppt}</div><div class="report-stat-label">Đã khám</div></div>`;
+  // Charts
+  const monthlyData=Array(12).fill(0);
+  patients.filter(p=>new Date(p.createdAt).getFullYear()===year).forEach(p=>{monthlyData[new Date(p.createdAt).getMonth()]++;});
+  if(chartMonthly)chartMonthly.destroy();
+  chartMonthly=new Chart(document.getElementById('chartMonthly').getContext('2d'),{
+    type:'bar',data:{labels:['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'],datasets:[{label:'BN',data:monthlyData,backgroundColor:'rgba(25,118,210,0.8)',borderRadius:6}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}}}}
+  });
+  const male=patients.filter(p=>p.gender==='Nam').length;
+  const female=patients.filter(p=>p.gender==='Nữ').length;
+  if(chartGender)chartGender.destroy();
+  chartGender=new Chart(document.getElementById('chartGender').getContext('2d'),{
+    type:'doughnut',data:{labels:['Nam','Nữ'],datasets:[{data:[male,female],backgroundColor:['#1976D2','#E91E63'],borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}}
+  });
+  const pending=appointments.filter(a=>a.status==='pending').length;
+  const done=appointments.filter(a=>a.status==='done').length;
+  const cancelled=appointments.filter(a=>a.status==='cancelled').length;
+  if(chartApptStatus)chartApptStatus.destroy();
+  chartApptStatus=new Chart(document.getElementById('chartApptStatus').getContext('2d'),{
+    type:'pie',data:{labels:['Chờ khám','Đã khám','Đã hủy'],datasets:[{data:[pending,done,cancelled],backgroundColor:['#FFA726','#26A69A','#EF5350'],borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}}
+  });
+  const countMap={};
+  appointments.forEach(a=>{countMap[a.patientId]=(countMap[a.patientId]||0)+1;});
+  const top5=Object.entries(countMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const rankCls=['gold','silver','bronze','other','other'];
+  document.getElementById('topPatients').innerHTML=top5.length?top5.map(([pid,cnt],i)=>{
+    const p=patients.find(x=>x.id===pid);
+    return `<div class="top-doctor-item">
+      <div class="rank-badge ${rankCls[i]}">${i+1}</div>
+      <span class="top-name">${p?esc(p.name):pid}</span>
+      <span class="top-count">${cnt} lần</span>
+    </div>`;
+  }).join(''):'<p style="color:var(--gray-400);font-size:13px;text-align:center;padding:16px">Chưa có dữ liệu</p>';
+}
+
+// ============ SHARED ============
+function renderPagination(totalPages,elId,cur,cb){
+  const el=document.getElementById(elId);
+  if(totalPages<=1){el.innerHTML='';return;}
+  let html=`<button class="page-btn" onclick="(${cb})(${cur-1})" ${cur===1?'disabled':''}>‹</button>`;
+  for(let i=1;i<=totalPages;i++) html+=`<button class="page-btn ${i===cur?'active':''}" onclick="(${cb})(${i})">${i}</button>`;
+  html+=`<button class="page-btn" onclick="(${cb})(${cur+1})" ${cur===totalPages?'disabled':''}>›</button>`;
+  el.innerHTML=html;
+}
+
+function showConfirm(type,title,msg,cb){
+  confirmCallback=cb;
+  const iconSvg=type==='danger'
+    ?`<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`
+    :`<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>`;
+  document.getElementById('confirmIcon').innerHTML=iconSvg;
+  document.getElementById('confirmIcon').className=`confirm-icon ${type}`;
+  document.getElementById('confirmTitle').textContent=title;
+  document.getElementById('confirmMsg').innerHTML=msg;
+  const btn=document.getElementById('confirmBtn');
+  btn.className=type==='danger'?'btn-danger':'btn-primary';
+  document.getElementById('confirmOverlay').classList.add('open');
+}
+function closeConfirm(){document.getElementById('confirmOverlay').classList.remove('open');confirmCallback=null;}
+document.getElementById('confirmBtn').addEventListener('click',()=>{if(confirmCallback)confirmCallback();closeConfirm();});
+
+let toastT;
+function showToast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=(type==='success'?'✓ ':type==='error'?'✕ ':'ℹ ')+msg;
+  t.className=`toast ${type} show`;
+  clearTimeout(toastT);
+  toastT=setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+function fmtDate(s){if(!s)return'—';const[y,m,d]=s.split('-');return`${d}/${m}/${y}`;}
+function age(dob){const t=new Date(),b=new Date(dob);let a=t.getFullYear()-b.getFullYear();if(t.getMonth()<b.getMonth()||(t.getMonth()===b.getMonth()&&t.getDate()<b.getDate()))a--;return a;}
+function esc(s){if(!s)return'';return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function strColor(name){const colors=['#1976D2','#7B1FA2','#C62828','#E65100','#2E7D32','#00695C','#1565C0'];let h=0;for(let i=0;i<name.length;i++)h=name.charCodeAt(i)+((h<<5)-h);return colors[Math.abs(h)%colors.length];}
+
+init();
+</script>
+</body>
+</html>
